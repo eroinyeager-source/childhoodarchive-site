@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>أرشيف الطفولة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- إضافة Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary: #8e44ad;
+            --primary-dark: #7d3c98;
+            --primary-light: #9b59b6;
+            --secondary: #3498db;
+            --secondary-dark: #2980b9;
+            --accent: #e74c3c;
+            --accent-light: #ff6b6b;
+            --gold: #f1c40f;
+            --gold-light: #f7dc6f;
+            --text-dark: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg-light: #f9f9f9;
+            --bg-white: #ffffff;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --shadow-heavy: 0 15px 40px rgba(0, 0, 0, 0.15);
+            --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
+            --gradient-gold: linear-gradient(135deg, var(--gold), var(--accent-light));
+            --gradient-secondary: linear-gradient(135deg, var(--secondary), var(--primary-light));
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* أنماط تسجيل الدخول */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--gradient-primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-container::before {
+            content: "";
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+            background-size: cover;
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-50px, -50px) rotate(360deg); }
+        }
+
+        .login-form {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 50px 40px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-heavy);
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            color: var(--primary);
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .login-header p {
+            color: var(--text-light);
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-dark);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.2);
+            outline: none;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 5px 15px rgba(142, 68, 173, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(142, 68, 173, 0.4);
+        }
+
+        /* أنماط الواجهة الرئيسية */
+        .header {
+            background: var(--gradient-primary);
+            box-shadow: var(--shadow);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+            color: var(--gold);
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .welcome-message {
+            font-size: 18px;
+            color: white;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            backdrop-filter: blur(5px);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            margin-top: 40px;
+        }
+
+        .page-title {
+            font-size: 32px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-weight: 800;
+            position: relative;
+            display: inline-block;
+        }
+
+        .page-title::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            right: 0;
+            width: 70%;
+            height: 4px;
+            background: var(--gradient-gold);
+            border-radius: 2px;
+        }
+
+        .page-subtitle {
+            color: var(--text-light);
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .sections-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .section-wrapper {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .section-wrapper:hover {
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .section-header {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-icon {
+            font-size: 24px;
+        }
+
+        .section-toggle {
+            font-size: 20px;
+            transition: var(--transition);
+        }
+
+        .section-toggle.rotated {
+            transform: rotate(180deg);
+        }
+
+        .section-content {
+            padding: 0;
+            max-height: 0;
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .section-content.expanded {
+            padding: 25px;
+            max-height: 1000px;
+        }
+
+        .section-topics {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .add-topic-btn {
+            background: var(--gradient-secondary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .add-topic-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .no-topics {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-light);
+            grid-column: 1 / -1;
+        }
+
+        .no-topics i {
+            font-size: 50px;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+
+        /* أنماط بطاقة الموضوع */
+        .topic-card {
+            background: var(--bg-white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            transition: var(--transition);
+            border-right: 4px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .topic-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: var(--transition);
+        }
+
+        .topic-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .topic-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .topic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .topic-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .topic-meta {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .topic-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .view-btn {
+            background: var(--gradient-secondary);
+            color: white;
+        }
+
+        .edit-btn {
+            background: var(--gradient-gold);
+            color: white;
+        }
+
+        .delete-btn {
+            background: var(--gradient-primary);
+            color: white;
+        }
+
+        .download-btn {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .topic-preview {
+            color: var(--text-light);
+            font-size: 14px;
+            line-height: 1.5;
+            margin-top: 10px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* أنماط النماذج */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: var(--bg-white);
+            margin: 50px auto;
+            padding: 40px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-heavy);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            color: var(--primary);
+            font-weight: 800;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            color: var(--accent);
+            transform: rotate(90deg);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .form-group-full {
+            grid-column: 1 / -1;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: var(--border-radius);
+            resize: vertical;
+            min-height: 120px;
+            font-size: 16px;
+            transition: var(--transition);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.2);
+            outline: none;
+        }
+
+        .file-input {
+            margin-top: 8px;
+            padding: 10px;
+            border: 2px dashed #e0e0e0;
+            border-radius: var(--border-radius);
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .file-input:hover {
+            border-color: var(--primary);
+            background-color: rgba(142, 68, 173, 0.05);
+        }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-secondary {
+            background: var(--bg-white);
+            color: var(--text-dark);
+            border: 2px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* عرض محتويات الموضوع */
+        .topic-content {
+            background-color: var(--bg-white);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .topic-field {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .topic-field h4 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .topic-field h4 i {
+            color: var(--gold);
+        }
+
+        .topic-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .topic-image {
+            max-width: 200px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+
+        .topic-image:hover {
+            transform: scale(1.05);
+        }
+
+        /* التجاوب مع الأجهزة المختلفة */
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .section-topics {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .topic-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .topic-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            .modal-content {
+                padding: 25px;
+            }
+            
+            .login-form {
+                padding: 30px 20px;
+            }
+        }
+
+        /* تأثيرات إضافية */
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0% { transform: translate(0, 0px); }
+            50% { transform: translate(0, 15px); }
+            100% { transform: translate(0, -0px); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(142, 68, 173, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(142, 68, 173, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(142, 68, 173, 0); }
+        }
+
+        /* تنبيهات */
+        .alert {
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        /* مؤشر التحميل */
+        .loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+        }
+
+        .loading-spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* مؤشر التزامن */
+        .sync-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--primary);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow);
+            z-index: 100;
+        }
+
+        .sync-indicator.syncing {
+            background: var(--accent);
+        }
+
+        .sync-indicator i {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- قسم تسجيل الدخول -->
+    <div id="login-section" class="login-container">
+        <div class="login-form floating">
+            <div class="login-header">
+                <h2>أرشيف الطفولة</h2>
+                <p>سجل الدخول للوصول إلى الأرشيف الكامل</p>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="username">اسم المستخدم</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">كلمة السر</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn pulse">دخول</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- مؤشر التحميل -->
+    <div id="loading" class="loading">
+        <div class="loading-spinner"></div>
+        <p>جاري إنشاء ملف Word مع الصور...</p>
+    </div>
+
+    <!-- مؤشر التزامن -->
+    <div id="sync-indicator" class="sync-indicator" style="display: none;">
+        <i class="fas fa-sync-alt"></i>
+        <span>جاري المزامنة...</span>
+    </div>
+
+    <!-- الواجهة الرئيسية -->
+    <div id="main-section" style="display: none;">
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-archive logo-icon"></i>
+                        <div class="logo-text">أرشيف الطفولة</div>
+                    </div>
+                    <div id="welcome-message" class="welcome-message">مرحباً أخ/أخت [اسم المستخدم]</div>
+                    <button id="logout-btn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <div class="container main-content">
+            <h1 class="page-title">الأرشيف الشامل</h1>
+            <p class="page-subtitle">إدارة وتنظيم محتوى جميع أقسام الطفولة - البيانات متزامنة بين جميع المستخدمين</p>
+            
+            <div class="sections-container" id="sections-container">
+                <!-- سيتم ملؤها ديناميكياً -->
+            </div>
+        </div>
+    </div>
+
+    <!-- نموذج إضافة/تعديل موضوع -->
+    <div id="topic-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title" class="modal-title">إضافة موضوع جديد</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form id="topic-form">
+                <input type="hidden" id="topic-id">
+                <input type="hidden" id="topic-section">
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="topic-title">عنوان الموضوع</label>
+                        <input type="text" id="topic-title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="topic-witness">الشاهد</label>
+                        <input type="text" id="topic-witness">
+                    </div>
+                    <div class="form-group">
+                        <label for="topic-giver">الأخ/الأخت المعطي/ة</label>
+                        <input type="text" id="topic-giver">
+                    </div>
+                    <div class="form-group">
+                        <label for="topic-goal">هدف الموضوع</label>
+                        <textarea id="topic-goal"></textarea>
+                    </div>
+                    <div class="form-group-full">
+                        <label for="topic-intro">التمهيد</label>
+                        <textarea id="topic-intro"></textarea>
+                    </div>
+                    <div class="form-group-full">
+                        <label for="topic-link">الربط</label>
+                        <textarea id="topic-link"></textarea>
+                    </div>
+                    <div class="form-group-full">
+                        <label for="topic-main-ideas">الأفكار الرئيسية</label>
+                        <textarea id="topic-main-ideas"></textarea>
+                    </div>
+                    <div class="form-group-full">
+                        <label for="topic-secondary-ideas">الأفكار الثانوية</label>
+                        <textarea id="topic-secondary-ideas"></textarea>
+                    </div>
+                    <div class="form-group-full">
+                        <label for="topic-expected-questions">الأسئلة المتوقعة</label>
+                        <textarea id="topic-expected-questions"></textarea>
+                    </div>
+                    <div class="form-group-full">
+                        <label for="topic-children-questions">أسئلة الأولاد ضمن الموضوع</label>
+                        <textarea id="topic-children-questions"></textarea>
+                    </div>
+                    <div class="form-group-full">
+                        <label for="topic-verse">آية الموضوع</label>
+                        <textarea id="topic-verse"></textarea>
+                    </div>
+                    <div class="form-group-full">
+                        <label for="topic-verse-discovery">اكتشاف الآية</label>
+                        <textarea id="topic-verse-discovery"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="topic-clarification-image">وسيلة الإيضاح (رفع صورة)</label>
+                        <input type="file" id="topic-clarification-image" class="file-input" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label for="topic-application-image">التطبيق (رفع صورة)</label>
+                        <input type="file" id="topic-application-image" class="file-input" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label for="topic-hymn-image">الترتيلة (رفع صورة)</label>
+                        <input type="file" id="topic-hymn-image" class="file-input" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label for="topic-hymn-link">رابط الترتيلة</label>
+                        <input type="url" id="topic-hymn-link">
+                    </div>
+                    <div class="form-group">
+                        <label for="topic-intro-image">صورة تمهيد (رفع صورة)</label>
+                        <input type="file" id="topic-intro-image" class="file-input" accept="image/*">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary close-modal-btn">إلغاء</button>
+                        <button type="submit" class="btn">حفظ الموضوع</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- عرض محتويات الموضوع -->
+    <div id="view-topic-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="view-topic-title" class="modal-title">عرض الموضوع</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div id="topic-content" class="topic-content">
+                <!-- سيتم ملؤها ديناميكياً -->
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn close-modal-btn">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تكوين Firebase - استبدل هذه القيم بتكوين مشروعك في Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyEXAMPLEEXAMPLEEXAMPLEEXAMPLEEXAMPLE",
+            authDomain: "childhood-archive.firebaseapp.com",
+            databaseURL: "https://childhood-archive-default-rtdb.firebaseio.com",
+            projectId: "childhood-archive",
+            storageBucket: "childhood-archive.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:exampleexampleexample"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // بيانات التطبيق
+        let currentUser = null;
+        let topics = {};
+        let currentSection = null;
+        let editingTopicId = null;
+
+        // عناصر DOM
+        const loginSection = document.getElementById('login-section');
+        const mainSection = document.getElementById('main-section');
+        const loginForm = document.getElementById('login-form');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const logoutBtn = document.getElementById('logout-btn');
+        const sectionsContainer = document.getElementById('sections-container');
+        const topicModal = document.getElementById('topic-modal');
+        const viewTopicModal = document.getElementById('view-topic-modal');
+        const topicForm = document.getElementById('topic-form');
+        const closeModalBtns = document.querySelectorAll('.close-btn, .close-modal-btn');
+        const loadingIndicator = document.getElementById('loading');
+        const syncIndicator = document.getElementById('sync-indicator');
+
+        // تعريف الأقسام
+        const sections = [
+            { name: "الملائكة", icon: "fas fa-angels" },
+            { name: "الصف الأول", icon: "fas fa-child" },
+            { name: "الصف الثاني", icon: "fas fa-user-graduate" },
+            { name: "الصف الثالث", icon: "fas fa-book-reader" },
+            { name: "الصف الرابع", icon: "fas fa-user-friends" },
+            { name: "الصف الخامس", icon: "fas fa-user-tie" },
+            { name: "الصف السادس", icon: "fas fa-graduation-cap" }
+        ];
+
+        // الاستماع للتغييرات في قاعدة البيانات
+        function setupDatabaseListener() {
+            database.ref('topics').on('value', (snapshot) => {
+                showSyncIndicator();
+                topics = snapshot.val() || {};
+                renderSections();
+                
+                setTimeout(() => {
+                    hideSyncIndicator();
+                }, 1000);
+            });
+        }
+
+        // إظهار مؤشر التزامن
+        function showSyncIndicator() {
+            syncIndicator.style.display = 'flex';
+            syncIndicator.classList.add('syncing');
+        }
+
+        // إخفاء مؤشر التزامن
+        function hideSyncIndicator() {
+            syncIndicator.classList.remove('syncing');
+            setTimeout(() => {
+                syncIndicator.style.display = 'none';
+            }, 500);
+        }
+
+        // حفظ البيانات في Firebase
+        function saveToFirebase() {
+            showSyncIndicator();
+            return database.ref('topics').set(topics)
+                .then(() => {
+                    console.log('Data saved successfully');
+                })
+                .catch((error) => {
+                    console.error('Error saving data:', error);
+                    showAlert('حدث خطأ في حفظ البيانات', 'error');
+                })
+                .finally(() => {
+                    setTimeout(() => {
+                        hideSyncIndicator();
+                    }, 1000);
+                });
+        }
+
+        // أحداث تسجيل الدخول
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // تغيير كلمة المرور من "123" إلى "fwl"
+            if (password === 'fwl') {
+                currentUser = username;
+                welcomeMessage.textContent = `مرحباً أخ/أخت ${username}`;
+                loginSection.style.display = 'none';
+                mainSection.style.display = 'block';
+                
+                // إعداد مستمع قاعدة البيانات وعرض الأقسام
+                setupDatabaseListener();
+            } else {
+                alert('كلمة السر غير صحيحة');
+            }
+        });
+
+        // حدث تسجيل الخروج
+        logoutBtn.addEventListener('click', function() {
+            currentUser = null;
+            mainSection.style.display = 'none';
+            loginSection.style.display = 'flex';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        });
+
+        // عرض الأقسام والمواضيع
+        function renderSections() {
+            sectionsContainer.innerHTML = '';
+            
+            sections.forEach(section => {
+                const sectionTopics = topics[section.name] || [];
+                
+                const sectionWrapper = document.createElement('div');
+                sectionWrapper.className = 'section-wrapper';
+                sectionWrapper.innerHTML = `
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="${section.icon} section-icon"></i>
+                            ${section.name}
+                        </div>
+                        <div class="section-toggle">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <button class="add-topic-btn" data-section="${section.name}">
+                            <i class="fas fa-plus"></i> إضافة موضوع جديد
+                        </button>
+                        <div class="section-topics">
+                            ${sectionTopics.length > 0 ? 
+                                sectionTopics.map((topic, index) => `
+                                    <div class="topic-card">
+                                        <div class="topic-header">
+                                            <div>
+                                                <div class="topic-title">${topic.title}</div>
+                                                <div class="topic-meta">${topic.giver ? `معطي الموضوع: ${topic.giver}` : ''}</div>
+                                                <div class="topic-meta">تم الإنشاء بواسطة: ${topic.createdBy || 'مستخدم'}</div>
+                                            </div>
+                                            <div class="topic-actions">
+                                                <button class="action-btn view-btn" data-section="${section.name}" data-id="${index}">
+                                                    <i class="fas fa-eye"></i> عرض
+                                                </button>
+                                                <button class="action-btn edit-btn" data-section="${section.name}" data-id="${index}">
+                                                    <i class="fas fa-edit"></i> تعديل
+                                                </button>
+                                                <button class="action-btn delete-btn" data-section="${section.name}" data-id="${index}">
+                                                    <i class="fas fa-trash"></i> حذف
+                                                </button>
+                                                <button class="action-btn download-btn" data-section="${section.name}" data-id="${index}">
+                                                    <i class="fas fa-download"></i> Word
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="topic-preview">${topic.intro || 'لا يوجد وصف للموضوع'}</div>
+                                    </div>
+                                `).join('') : 
+                                `<div class="no-topics">
+                                    <i class="fas fa-folder-open"></i>
+                                    <p>لا توجد مواضيع في هذا القسم بعد</p>
+                                </div>`
+                            }
+                        </div>
+                    </div>
+                `;
+                
+                sectionsContainer.appendChild(sectionWrapper);
+                
+                // إضافة أحداث للقسم
+                const sectionHeader = sectionWrapper.querySelector('.section-header');
+                const sectionContent = sectionWrapper.querySelector('.section-content');
+                const sectionToggle = sectionWrapper.querySelector('.section-toggle');
+                
+                sectionHeader.addEventListener('click', function() {
+                    sectionContent.classList.toggle('expanded');
+                    sectionToggle.classList.toggle('rotated');
+                });
+                
+                // إضافة حدث لزر إضافة موضوع
+                const addTopicBtn = sectionWrapper.querySelector('.add-topic-btn');
+                addTopicBtn.addEventListener('click', function() {
+                    currentSection = this.dataset.section;
+                    document.getElementById('modal-title').textContent = `إضافة موضوع جديد - ${currentSection}`;
+                    document.getElementById('topic-section').value = currentSection;
+                    topicForm.reset();
+                    editingTopicId = null;
+                    topicModal.style.display = 'block';
+                });
+                
+                // إضافة أحداث لأزرار الموضوع
+                sectionWrapper.querySelectorAll('.view-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        viewTopic(this.dataset.section, this.dataset.id);
+                    });
+                });
+                
+                sectionWrapper.querySelectorAll('.edit-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        editTopic(this.dataset.section, this.dataset.id);
+                    });
+                });
+                
+                sectionWrapper.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        deleteTopic(this.dataset.section, this.dataset.id);
+                    });
+                });
+                
+                sectionWrapper.querySelectorAll('.download-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        downloadTopicAsWord(this.dataset.section, this.dataset.id);
+                    });
+                });
+            });
+        }
+
+        // حفظ الموضوع
+        topicForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const topicData = {
+                title: document.getElementById('topic-title').value,
+                witness: document.getElementById('topic-witness').value,
+                giver: document.getElementById('topic-giver').value,
+                goal: document.getElementById('topic-goal').value,
+                intro: document.getElementById('topic-intro').value,
+                link: document.getElementById('topic-link').value,
+                mainIdeas: document.getElementById('topic-main-ideas').value,
+                secondaryIdeas: document.getElementById('topic-secondary-ideas').value,
+                expectedQuestions: document.getElementById('topic-expected-questions').value,
+                childrenQuestions: document.getElementById('topic-children-questions').value,
+                verse: document.getElementById('topic-verse').value,
+                verseDiscovery: document.getElementById('topic-verse-discovery').value,
+                hymnLink: document.getElementById('topic-hymn-link').value,
+                createdBy: currentUser,
+                createdAt: new Date().toISOString(),
+                clarificationImage: document.getElementById('topic-clarification-image').files[0] ? 
+                    URL.createObjectURL(document.getElementById('topic-clarification-image').files[0]) : null,
+                applicationImage: document.getElementById('topic-application-image').files[0] ? 
+                    URL.createObjectURL(document.getElementById('topic-application-image').files[0]) : null,
+                hymnImage: document.getElementById('topic-hymn-image').files[0] ? 
+                    URL.createObjectURL(document.getElementById('topic-hymn-image').files[0]) : null,
+                introImage: document.getElementById('topic-intro-image').files[0] ? 
+                    URL.createObjectURL(document.getElementById('topic-intro-image').files[0]) : null
+            };
+            
+            const section = document.getElementById('topic-section').value;
+            
+            if (!topics[section]) {
+                topics[section] = [];
+            }
+            
+            if (editingTopicId !== null) {
+                // تحديث الموضوع الموجود
+                topics[section][editingTopicId] = {
+                    ...topics[section][editingTopicId],
+                    ...topicData,
+                    updatedBy: currentUser,
+                    updatedAt: new Date().toISOString()
+                };
+            } else {
+                // إضافة موضوع جديد
+                topics[section].push(topicData);
+            }
+            
+            // حفظ في Firebase
+            saveToFirebase().then(() => {
+                topicModal.style.display = 'none';
+                showAlert('تم حفظ الموضوع بنجاح!', 'success');
+            });
+        });
+
+        // عرض الموضوع
+        function viewTopic(section, topicId) {
+            const topic = topics[section][topicId];
+            document.getElementById('view-topic-title').textContent = topic.title;
+            
+            let contentHTML = `
+                <div class="topic-field">
+                    <h4><i class="fas fa-heading"></i> عنوان الموضوع</h4>
+                    <p>${topic.title}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-user-check"></i> الشاهد</h4>
+                    <p>${topic.witness || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-user-friends"></i> الأخ/الأخت المعطي/ة</h4>
+                    <p>${topic.giver || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-bullseye"></i> هدف الموضوع</h4>
+                    <p>${topic.goal || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-door-open"></i> التمهيد</h4>
+                    <p>${topic.intro || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-link"></i> الربط</h4>
+                    <p>${topic.link || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-lightbulb"></i> الأفكار الرئيسية</h4>
+                    <p>${topic.mainIdeas || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-list"></i> الأفكار الثانوية</h4>
+                    <p>${topic.secondaryIdeas || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-question-circle"></i> الأسئلة المتوقعة</h4>
+                    <p>${topic.expectedQuestions || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-child"></i> أسئلة الأولاد ضمن الموضوع</h4>
+                    <p>${topic.childrenQuestions || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-book"></i> آية الموضوع</h4>
+                    <p>${topic.verse || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-search"></i> اكتشاف الآية</h4>
+                    <p>${topic.verseDiscovery || 'غير محدد'}</p>
+                </div>
+                <div class="topic-field">
+                    <h4><i class="fas fa-info-circle"></i> معلومات النشر</h4>
+                    <p>تم الإنشاء بواسطة: ${topic.createdBy || 'مستخدم'}</p>
+                    <p>تاريخ الإنشاء: ${new Date(topic.createdAt).toLocaleString('ar-SA')}</p>
+                    ${topic.updatedBy ? `<p>تم التعديل بواسطة: ${topic.updatedBy}</p>` : ''}
+                    ${topic.updatedAt ? `<p>تاريخ التعديل: ${new Date(topic.updatedAt).toLocaleString('ar-SA')}</p>` : ''}
+                </div>
+            `;
+            
+            // عرض الصور إذا كانت موجودة
+            const images = [];
+            if (topic.clarificationImage) images.push({src: topic.clarificationImage, title: 'وسيلة الإيضاح'});
+            if (topic.applicationImage) images.push({src: topic.applicationImage, title: 'التطبيق'});
+            if (topic.hymnImage) images.push({src: topic.hymnImage, title: 'الترتيلة'});
+            if (topic.introImage) images.push({src: topic.introImage, title: 'صورة تمهيد'});
+            
+            if (images.length > 0) {
+                contentHTML += `<div class="topic-field">
+                    <h4><i class="fas fa-images"></i> الصور المرفوعة</h4>
+                    <div class="topic-images">`;
+                
+                images.forEach(img => {
+                    contentHTML += `<div>
+                        <p>${img.title}</p>
+                        <img src="${img.src}" alt="${img.title}" class="topic-image">
+                    </div>`;
+                });
+                
+                contentHTML += `</div></div>`;
+            }
+            
+            if (topic.hymnLink) {
+                contentHTML += `<div class="topic-field">
+                    <h4><i class="fas fa-music"></i> رابط الترتيلة</h4>
+                    <p><a href="${topic.hymnLink}" target="_blank">${topic.hymnLink}</a></p>
+                </div>`;
+            }
+            
+            document.getElementById('topic-content').innerHTML = contentHTML;
+            viewTopicModal.style.display = 'block';
+        }
+
+        // تعديل الموضوع
+        function editTopic(section, topicId) {
+            const topic = topics[section][topicId];
+            document.getElementById('modal-title').textContent = `تعديل موضوع - ${section}`;
+            document.getElementById('topic-section').value = section;
+            
+            // تعبئة الحقول بقيم الموضوع
+            document.getElementById('topic-title').value = topic.title;
+            document.getElementById('topic-witness').value = topic.witness || '';
+            document.getElementById('topic-giver').value = topic.giver || '';
+            document.getElementById('topic-goal').value = topic.goal || '';
+            document.getElementById('topic-intro').value = topic.intro || '';
+            document.getElementById('topic-link').value = topic.link || '';
+            document.getElementById('topic-main-ideas').value = topic.mainIdeas || '';
+            document.getElementById('topic-secondary-ideas').value = topic.secondaryIdeas || '';
+            document.getElementById('topic-expected-questions').value = topic.expectedQuestions || '';
+            document.getElementById('topic-children-questions').value = topic.childrenQuestions || '';
+            document.getElementById('topic-verse').value = topic.verse || '';
+            document.getElementById('topic-verse-discovery').value = topic.verseDiscovery || '';
+            document.getElementById('topic-hymn-link').value = topic.hymnLink || '';
+            
+            editingTopicId = topicId;
+            topicModal.style.display = 'block';
+        }
+
+        // حذف الموضوع
+        function deleteTopic(section, topicId) {
+            if (confirm('هل أنت متأكد من حذف هذا الموضوع؟')) {
+                topics[section].splice(topicId, 1);
+                
+                // حفظ في Firebase
+                saveToFirebase().then(() => {
+                    showAlert('تم حذف الموضوع بنجاح!', 'success');
+                });
+            }
+        }
+
+        // تنزيل الموضوع كملف Word مع الصور
+        async function downloadTopicAsWord(section, topicId) {
+            const topic = topics[section][topicId];
+            
+            // إظهار مؤشر التحميل
+            loadingIndicator.style.display = 'flex';
+            
+            try {
+                // بناء قسم الصور في HTML
+                let imagesHTML = '';
+                
+                // إضافة الصور إذا كانت موجودة
+                if (topic.clarificationImage) {
+                    imagesHTML += `
+                        <div style="page-break-inside: avoid;">
+                            <h3 style="color: #8e44ad; border-bottom: 1px solid #8e44ad; padding-bottom: 5px;">وسيلة الإيضاح</h3>
+                            <img src="${topic.clarificationImage}" style="max-width: 500px; height: auto; display: block; margin: 10px auto;" />
+                        </div>
+                    `;
+                }
+                
+                if (topic.applicationImage) {
+                    imagesHTML += `
+                        <div style="page-break-inside: avoid;">
+                            <h3 style="color: #8e44ad; border-bottom: 1px solid #8e44ad; padding-bottom: 5px;">التطبيق</h3>
+                            <img src="${topic.applicationImage}" style="max-width: 500px; height: auto; display: block; margin: 10px auto;" />
+                        </div>
+                    `;
+                }
+                
+                if (topic.hymnImage) {
+                    imagesHTML += `
+                        <div style="page-break-inside: avoid;">
+                            <h3 style="color: #8e44ad; border-bottom: 1px solid #8e44ad; padding-bottom: 5px;">الترتيلة</h3>
+                            <img src="${topic.hymnImage}" style="max-width: 500px; height: auto; display: block; margin: 10px auto;" />
+                        </div>
+                    `;
+                }
+                
+                if (topic.introImage) {
+                    imagesHTML += `
+                        <div style="page-break-inside: avoid;">
+                            <h3 style="color: #8e44ad; border-bottom: 1px solid #8e44ad; padding-bottom: 5px;">صورة تمهيد</h3>
+                            <img src="${topic.introImage}" style="max-width: 500px; height: auto; display: block; margin: 10px auto;" />
+                        </div>
+                    `;
+                }
+
+                // إنشاء محتوى Word مع الصور
+                const content = `
+                    <html xmlns:o='urn:schemas-microsoft-com:office:office' 
+                          xmlns:w='urn:schemas-microsoft-com:office:word' 
+                          xmlns='http://www.w3.org/TR/REC-html40'>
+                    <head>
+                        <meta charset="utf-8">
+                        <title>${topic.title}</title>
+                        <style>
+                            body {
+                                font-family: 'Times New Roman', serif;
+                                direction: rtl;
+                                text-align: right;
+                                line-height: 1.6;
+                                margin: 2cm;
+                            }
+                            h1 {
+                                color: #2c3e50;
+                                text-align: center;
+                                border-bottom: 2px solid #8e44ad;
+                                padding-bottom: 10px;
+                            }
+                            h2 {
+                                color: #8e44ad;
+                                margin-top: 20px;
+                                border-right: 3px solid #3498db;
+                                padding-right: 10px;
+                            }
+                            h3 {
+                                color: #8e44ad;
+                                margin-top: 15px;
+                            }
+                            .section {
+                                margin-bottom: 20px;
+                                padding: 10px;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 5px;
+                            }
+                            .section-title {
+                                font-weight: bold;
+                                color: #3498db;
+                                display: inline-block;
+                                width: 150px;
+                            }
+                            img {
+                                max-width: 500px;
+                                height: auto;
+                                display: block;
+                                margin: 10px auto;
+                                border: 1px solid #ddd;
+                                border-radius: 5px;
+                                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                            }
+                            .page-break {
+                                page-break-before: always;
+                            }
+                            .meta-info {
+                                font-size: 12px;
+                                color: #7f8c8d;
+                                margin-top: 20px;
+                                padding-top: 10px;
+                                border-top: 1px solid #e0e0e0;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>${topic.title}</h1>
+                        
+                        <div class="section">
+                            <h2>معلومات الموضوع</h2>
+                            <p><span class="section-title">الشاهد:</span> ${topic.witness || 'غير محدد'}</p>
+                            <p><span class="section-title">الأخ/الأخت المعطي/ة:</span> ${topic.giver || 'غير محدد'}</p>
+                            <p><span class="section-title">هدف الموضوع:</span> ${topic.goal || 'غير محدد'}</p>
+                        </div>
+
+                        <div class="section">
+                            <h2>محتويات الموضوع</h2>
+                            <p><span class="section-title">التمهيد:</span> ${topic.intro || 'غير محدد'}</p>
+                            <p><span class="section-title">الربط:</span> ${topic.link || 'غير محدد'}</p>
+                        </div>
+
+                        <div class="section">
+                            <h2>الأفكار</h2>
+                            <p><span class="section-title">الأفكار الرئيسية:</span> ${topic.mainIdeas || 'غير محدد'}</p>
+                            <p><span class="section-title">الأفكار الثانوية:</span> ${topic.secondaryIdeas || 'غير محدد'}</p>
+                        </div>
+
+                        <div class="section">
+                            <h2>الأسئلة</h2>
+                            <p><span class="section-title">الأسئلة المتوقعة:</span> ${topic.expectedQuestions || 'غير محدد'}</p>
+                            <p><span class="section-title">أسئلة الأولاد:</span> ${topic.childrenQuestions || 'غير محدد'}</p>
+                        </div>
+
+                        <div class="section">
+                            <h2>الآية</h2>
+                            <p><span class="section-title">آية الموضوع:</span> ${topic.verse || 'غير محدد'}</p>
+                            <p><span class="section-title">اكتشاف الآية:</span> ${topic.verseDiscovery || 'غير محدد'}</p>
+                        </div>
+
+                        ${imagesHTML ? `<div class="page-break"></div><div class="section"><h2>الصور المرفوعة</h2>${imagesHTML}</div>` : ''}
+
+                        ${topic.hymnLink ? `
+                        <div class="section">
+                            <h2>الترتيلة</h2>
+                            <p><span class="section-title">رابط الترتيلة:</span> ${topic.hymnLink}</p>
+                        </div>
+                        ` : ''}
+
+                        <div class="meta-info">
+                            <p><strong>معلومات النشر:</strong></p>
+                            <p>تم الإنشاء بواسطة: ${topic.createdBy || 'مستخدم'}</p>
+                            <p>تاريخ الإنشاء: ${new Date(topic.createdAt).toLocaleString('ar-SA')}</p>
+                            ${topic.updatedBy ? `<p>تم التعديل بواسطة: ${topic.updatedBy}</p>` : ''}
+                            ${topic.updatedAt ? `<p>تاريخ التعديل: ${new Date(topic.updatedAt).toLocaleString('ar-SA')}</p>` : ''}
+                            <p><em>تم إنشاء هذا الملف من أرشيف الطفولة - ${new Date().toLocaleDateString('ar-SA')}</em></p>
+                        </div>
+                    </body>
+                    </html>
+                `;
+
+                // إنشاء ملف Word
+                const blob = new Blob([content], { type: 'application/msword' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${topic.title}.doc`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showAlert('تم تحميل ملف Word بنجاح!', 'success');
+            } catch (error) {
+                console.error('Error generating Word file:', error);
+                showAlert('حدث خطأ أثناء إنشاء ملف Word', 'error');
+            } finally {
+                // إخفاء مؤشر التحميل
+                loadingIndicator.style.display = 'none';
+            }
+        }
+
+        // إظهار تنبيه
+        function showAlert(message, type) {
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            
+            const container = document.querySelector('.container');
+            container.insertBefore(alert, container.firstChild);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+
+        // إغلاق النماذج
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                topicModal.style.display = 'none';
+                viewTopicModal.style.display = 'none';
+            });
+        });
+
+        // إغلاق النماذج عند النقر خارجها
+        window.addEventListener('click', function(e) {
+            if (e.target === topicModal) {
+                topicModal.style.display = 'none';
+            }
+            if (e.target === viewTopicModal) {
+                viewTopicModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
